@@ -1,5 +1,4 @@
 import random
-from turtle import title
 
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 
