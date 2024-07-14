@@ -1,7 +1,5 @@
 import random
 
-from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
-
 from datacenter.models import (
     Chastisement,
     Commendation,
@@ -14,14 +12,13 @@ from datacenter.models import (
 
 def get_schoolkid(name):
     try:
-        schoolkid = Schoolkid.objects.filter(full_name__contains=name).get()
-    except MultipleObjectsReturned:
+        return Schoolkid.objects.get(full_name__contains=name)
+    except Schoolkid.MultipleObjectsReturned:
         print(f"Школьников с именем {name} несколько, уточни запрос")
         return
-    except ObjectDoesNotExist:
+    except Schoolkid.DoesNotExist:
         print("Такого школьника нет, уточни запрос")
         return
-    return schoolkid
 
 
 def fix_marks(schoolkid):
@@ -34,7 +31,7 @@ def remove_chastisements(schoolkid):
     Chastisement.objects.filter(schoolkid=schoolkid).delete()
 
 
-def create_commendation(schoolkid, subject=None):
+def create_commendation(schoolkid, subject_title=None):
     commendation_variants = [
         "Молодец!",
         "Отлично!",
@@ -68,19 +65,21 @@ def create_commendation(schoolkid, subject=None):
         "Теперь у тебя точно все получится!",
     ]
 
-    if subject:
+    if subject_title:
         try:
-            subject = Subject.objects.filter(
-                title__contains=subject, year_of_study=schoolkid.year_of_study
-            ).get()
-        except ObjectDoesNotExist:
+            subject = Subject.objects.get(
+                title__contains=subject_title,
+                year_of_study=schoolkid.year_of_study,
+            )
+        except Subject.DoesNotExist:
             print("Такого предмета нет, видимо ошибка в написании")
             return
     else:
-        subjects = Subject.objects.filter(
-            year_of_study=schoolkid.year_of_study
+        subject = (
+            Subject.objects.filter(year_of_study=schoolkid.year_of_study)
+            .order_by("?")
+            .first()
         )
-        subject = random.choice(subjects)
 
     commendation_text = random.choice(commendation_variants)
 
